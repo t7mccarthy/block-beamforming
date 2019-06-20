@@ -98,8 +98,8 @@ class BlockArray:
 
 
 
-# array1 = BlockArray([-20, -lmbda, -100, -90, -75, -60, 1.3 * lmbda, 30, 35, 40, 50], math.radians(120))
-array1 = BlockArray([-0, -lmbda, lmbda, -2 * lmbda, 2 * lmbda, -3 * lmbda, 3 * lmbda, -4*lmbda, 4*lmbda, -5*lmbda, 5*lmbda], math.radians(120))
+array1 = BlockArray([-20, -lmbda, -100, -90, -75, -60, 1.3 * lmbda, 30, 35, 40, 50], math.radians(120))
+# array1 = BlockArray([-0, -lmbda, lmbda, -2 * lmbda, 2 * lmbda, -3 * lmbda, 3 * lmbda, -4*lmbda, 4*lmbda, -5*lmbda, 5*lmbda], math.radians(120))
 array1.solve()
 array1.output_results()
 array1.visualize(True)
