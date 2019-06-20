@@ -9,11 +9,17 @@ class Antenna:
     def __init__(self):
         self.phase = None
         self.amplitude = None
-    def set_values(self, p, a):
-        self.phase = p
-        self.amplitude = a
-    def get_values(self):
+        self.excitation = 1
+    def set_values(self, I):
+        self.excitation = I
+        x = I.real
+        y = I.imag
+        self.phase = math.atan2(y, x)
+        self.amplitude = x / math.cos(self.phase)
+    def get_phase_amp(self):
         return (self.phase, self.amplitude)
+    def get_excitation(self):
+        return self.excitation
 
 class Block:
     def __init__(self, p, s = lmbda / 2):
@@ -26,6 +32,9 @@ class Block:
         return self.spacing
     def get_antennas(self):
         return self.antennas
+    def set_antennas(self, a1, a2):
+        self.antennas[0].set_values(a1)
+        self.antennas[1].set_values(a2)
 
 class BlockArray:
     def __init__(self, ps, t):
@@ -39,36 +48,38 @@ class BlockArray:
             antenna_pos[(b * 2) - 1] = center - offset
             antenna_pos[b * 2] = center + offset
         self.antenna_pos = antenna_pos
-        self.phases = [0] * (self.num_blocks * 2)
-
-    def change_target(self, t):
-        self.target = t
 
     def get_array_factor(self, theta):
-        # d = lmbda / 2
         sum = 0
         n = -(self.num_blocks * 2 - 1)/2
-        for a in range(self.num_blocks * 2):
-            # d = lmbda/2
-            d = self.antenna_pos[a]/n
-            r = wave_num * d * math.cos(self.target)
-            sum += cmath.exp(1j * n * (wave_num * d * math.cos(theta) - r))
-            n += 1
+        I_0 = self.blocks[0].get_antennas()[0].get_excitation()
+        for b in range(self.num_blocks):
+            for i in range(2):
+                a = 2 * b + i
+                d = self.antenna_pos[a]/n
+                I_n = self.blocks[b].get_antennas()[i].get_excitation()
+                sum += (I_n / I_0) * cmath.exp(1j * n * wave_num * d * math.cos(theta))
+                n += 1
         return sum
 
-    # def get_solution(self):
-    #     d = lmbda / 2
-    #     a = k * d * math.cos(self.target)
-    #
+    def get_solution(self):
+        n = -(self.num_blocks * 2 - 1)/2
+        for b in range(self.num_blocks):
+            I = [0] * 2
+            for i in range(2):
+                n_i = n + i
+                d = self.antenna_pos[(2 * b) + i]/n_i
+                a = wave_num * d * math.cos(self.target)
+                I[i] = cmath.exp(1j * -n_i * a)
+            n += 2
+            self.blocks[b].set_antennas(I[0], I[1])
 
-    # def find_best(self):
-
-
-    def visualize(self):
-        plt.scatter(self.antenna_pos, [0] * (self.num_blocks * 2))
-        plt.title('Antenna Positions')
-        plt.xlabel('Position')
-        plt.show()
+    def visualize(self, show_block_positions=False):
+        if show_block_positions:
+            plt.scatter(self.antenna_pos, [0] * (self.num_blocks * 2))
+            plt.title('Antenna Positions')
+            plt.xlabel('Position')
+            plt.show()
 
         y = [0] * 181
         for i in range(181):
@@ -81,6 +92,7 @@ class BlockArray:
 
 
 
-array1 = BlockArray([-20, -lmbda, 1.3 * lmbda, 30, 35, 40], math.radians(25))
-# array1.find_best()
+# array1 = BlockArray([-20, -lmbda, 1.3 * lmbda, 30, 35, 40, 50], math.radians(125))
+array1 = BlockArray([-20, -lmbda, 1.3 * lmbda, 30, 35, 40, 50], math.radians(125))
+array1.get_solution()
 array1.visualize()
